@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('token');
     if (token) {
         // Verificar si el token es válido
-        fetch('/api/check-auth', {
+        fetch('/check-auth', {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const password = document.querySelector('#password').value;
         
         try {
-            const response = await fetch('/api/login', {
+            const response = await fetch('/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -43,7 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
             }
             
             const data = await response.json();

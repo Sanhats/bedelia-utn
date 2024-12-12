@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (response.ok) {
                 localStorage.setItem('token', data.token);
-                window.location.href = '/inicio.html';
+                window.location.href = '/index.html';
             } else {
                 alert('Credenciales inválidas');
             }

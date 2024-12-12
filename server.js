@@ -1,46 +1,23 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const jwt = require('jsonwebtoken');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-require('dotenv').config();
+import express from 'express';
+import mongoose from 'mongoose';
+import jwt from 'jsonwebtoken';
+import bodyParser from 'body-parser';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import path from 'path';
 
-const path = require('path');
+import Usuario from '../models/Usuario';
+import Proyecto from '../models/Proyecto';
+import Tesina from '../models/Tesina';
+import Mobiliario from '../models/Mobiliario';
 
-
-
-const Usuario = require('./models/Usuario');
-const Proyecto = require('./models/Proyecto');
-const Tesina = require('./models/Tesina');
-const Mobiliario = require('./models/Mobiliario');
+dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(bodyParser.json());
-
-const path = require('path');
-
-
-app.use(express.static(path.join(__dirname, 'public')));
-
-
-
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.listen(PORT, () => {
-  console.log(`Servidor escuchando en el puerto ${PORT}`);
-});
-
-
-
-
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'Inicio.html'));
-});
+app.use(express.static(path.join(__dirname, '..', 'public')));
 
 mongoose.connect(process.env.MONGODB_URI)
     .then(() => console.log('MongoDB conectado'))
@@ -64,7 +41,7 @@ const auth = async (req, res, next) => {
   }
 };
 
-app.post('/login', async (req, res) => {
+app.post('/api/login', async (req, res) => {
   try {
     const { username, password } = req.body;
     const usuario = await Usuario.findOne({ username });
@@ -78,7 +55,7 @@ app.post('/login', async (req, res) => {
   }
 });
 
-app.post('/proyectos', auth, async (req, res) => {
+app.post('/api/proyectos', auth, async (req, res) => {
   try {
     const proyecto = new Proyecto(req.body);
     await proyecto.save();
@@ -88,7 +65,7 @@ app.post('/proyectos', auth, async (req, res) => {
   }
 });
 
-app.get('/proyectos', auth, async (req, res) => {
+app.get('/api/proyectos', auth, async (req, res) => {
   try {
     const proyectos = await Proyecto.find({});
     res.send(proyectos);
@@ -97,7 +74,7 @@ app.get('/proyectos', auth, async (req, res) => {
   }
 });
 
-app.delete('/proyectos/:id', auth, async (req, res) => {
+app.delete('/api/proyectos/:id', auth, async (req, res) => {
   try {
     const proyecto = await Proyecto.findByIdAndDelete(req.params.id);
     if (!proyecto) {
@@ -109,7 +86,7 @@ app.delete('/proyectos/:id', auth, async (req, res) => {
   }
 });
 
-app.post('/tesinas', auth, async (req, res) => {
+app.post('/api/tesinas', auth, async (req, res) => {
   try {
     const tesina = new Tesina(req.body);
     await tesina.save();
@@ -120,7 +97,7 @@ app.post('/tesinas', auth, async (req, res) => {
   }
 });
 
-app.get('/tesinas', auth, async (req, res) => {
+app.get('/api/tesinas', auth, async (req, res) => {
   try {
     const tesinas = await Tesina.find({});
     res.send(tesinas);
@@ -130,7 +107,7 @@ app.get('/tesinas', auth, async (req, res) => {
   }
 });
 
-app.delete('/tesinas/:id', auth, async (req, res) => {
+app.delete('/api/tesinas/:id', auth, async (req, res) => {
   try {
     const tesina = await Tesina.findByIdAndDelete(req.params.id);
     if (!tesina) {
@@ -143,7 +120,7 @@ app.delete('/tesinas/:id', auth, async (req, res) => {
   }
 });
 
-app.post('/mobiliario', auth, async (req, res) => {
+app.post('/api/mobiliario', auth, async (req, res) => {
   try {
     const mobiliario = new Mobiliario(req.body);
     await mobiliario.save();
@@ -153,7 +130,7 @@ app.post('/mobiliario', auth, async (req, res) => {
   }
 });
 
-app.get('/mobiliario', auth, async (req, res) => {
+app.get('/api/mobiliario', auth, async (req, res) => {
   try {
     const mobiliarios = await Mobiliario.find({});
     res.send(mobiliarios);
@@ -162,7 +139,7 @@ app.get('/mobiliario', auth, async (req, res) => {
   }
 });
 
-app.patch('/mobiliario/:tipo', auth, async (req, res) => {
+app.patch('/api/mobiliario/:tipo', auth, async (req, res) => {
   try {
     const { tipo } = req.params;
     const { cantidad } = req.body;
@@ -180,11 +157,9 @@ app.patch('/mobiliario/:tipo', auth, async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-    console.log(`Servidor escuchando en el puerto ${PORT}`);
-    console.log(`http://localhost:${PORT}`);
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
 
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+export default app;
+

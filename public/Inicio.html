@@ -50,7 +50,7 @@
           const token = localStorage.getItem('token');
           if (!token) {
             console.error('No token found');
-            window.location.href = '/login.html';
+            window.location.href = '/index.html';
             return;
           }
 
@@ -85,7 +85,7 @@
         }
 
         try {
-          const response = await fetch('/inicio.html', {
+          const response = await fetch('/index.html', {
             headers: {
               'Authorization': `Bearer ${token}`
             }
@@ -96,7 +96,7 @@
           }
         } catch (error) {
           console.error('Error de autenticación:', error);
-          window.location.href = '/login.html';
+          window.location.href = '/index.html';
         }
       };
 

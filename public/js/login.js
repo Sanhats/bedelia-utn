@@ -1,4 +1,25 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Verificar si ya hay un token válido
+    const token = localStorage.getItem('token');
+    if (token) {
+        // Verificar si el token es válido
+        fetch('/check-auth', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                window.location.href = '/inicio.html';
+            } else {
+                localStorage.removeItem('token');
+            }
+        })
+        .catch(() => {
+            localStorage.removeItem('token');
+        });
+    }
+
     const loginForm = document.querySelector('form');
     
     loginForm.addEventListener('submit', async (e) => {
@@ -8,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const password = document.querySelector('#password').value;
         
         try {
-            const response = await fetch('http://localhost:5000/login', {
+            const response = await fetch('/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -20,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (response.ok) {
                 localStorage.setItem('token', data.token);
-                window.location.href = '/index.html';
+                window.location.href = '/inicio.html';
             } else {
                 alert('Credenciales inválidas');
             }
@@ -30,3 +51,4 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+

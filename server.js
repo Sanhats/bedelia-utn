@@ -1,145 +1,168 @@
-import express from 'express';
-import mongoose from 'mongoose';
-import jwt from 'jsonwebtoken';
-import bodyParser from 'body-parser';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import path from 'path';
+const express = require('express');
+const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+const path = require('path');
+require('dotenv').config();
 
-import Usuario from '../models/Usuario';
-import Proyecto from '../models/Proyecto';
-import Tesina from '../models/Tesina';
-import Mobiliario from '../models/Mobiliario';
-
-dotenv.config();
+const Usuario = require('./models/Usuario');
+const Proyecto = require('./models/Proyecto');
+const Tesina = require('./models/Tesina');
+const Mobiliario = require('./models/Mobiliario');
 
 const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Credenciales únicas
+const ADMIN_USERNAME = 'Bedelia';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Bedelia123'; // Asegúrate de configurar esto en tus variables de entorno
 
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, '..', 'public')));
+app.use(express.static(path.join(__dirname, 'public')));
 
+// Middleware para verificar el token en rutas protegidas
+const auth = (req, res, next) => {
+  try {
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    if (!token) {
+      throw new Error('No token provided');
+    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    res.status(401).json({ error: 'Please authenticate.' });
+  }
+};
+
+// Conexión a MongoDB
 mongoose.connect(process.env.MONGODB_URI)
     .then(() => console.log('MongoDB conectado'))
     .catch((error) => console.error('Error al conectar a MongoDB:', error));
 
-const auth = async (req, res, next) => {
-  try {
-    const token = req.header('Authorization').replace('Bearer ', '');
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const usuario = await Usuario.findOne({ _id: decoded._id });
-
-    if (!usuario) {
-      throw new Error();
-    }
-
-    req.token = token;
-    req.usuario = usuario;
-    next();
-  } catch (error) {
-    res.status(401).send({ error: 'Por favor autentícate.' });
-  }
-};
-
-app.post('/api/login', async (req, res) => {
+// Ruta de login
+app.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
-    const usuario = await Usuario.findOne({ username });
-    if (!usuario || usuario.password !== password) {
-      return res.status(401).send({ error: 'Credenciales inválidas' });
+    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+      const token = jwt.sign({ username: ADMIN_USERNAME }, process.env.JWT_SECRET);
+      res.json({ user: { username: ADMIN_USERNAME }, token });
+    } else {
+      res.status(401).json({ error: 'Credenciales inválidas' });
     }
-    const token = jwt.sign({ _id: usuario._id }, process.env.JWT_SECRET);
-    res.send({ usuario, token });
   } catch (error) {
-    res.status(400).send(error);
+    res.status(400).json({ error: error.message });
   }
 });
 
-app.post('/api/proyectos', auth, async (req, res) => {
+// Ruta de logout
+app.post('/logout', auth, (req, res) => {
+  // En una implementación real, aquí podrías invalidar el token en el servidor
+  res.json({ message: 'Logout successful' });
+});
+
+// Rutas protegidas para archivos HTML
+app.get('/inicio.html', auth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'inicio.html'));
+});
+
+app.get('/proyectos.html', auth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'proyectos.html'));
+});
+
+app.get('/tesinas.html', auth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'tesinas.html'));
+});
+
+app.get('/mobiliario.html', auth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'mobiliario.html'));
+});
+
+// Rutas de API protegidas
+app.post('/proyectos', auth, async (req, res) => {
   try {
     const proyecto = new Proyecto(req.body);
     await proyecto.save();
-    res.status(201).send(proyecto);
+    res.status(201).json(proyecto);
   } catch (error) {
-    res.status(400).send(error);
+    res.status(400).json({ error: error.message });
   }
 });
 
-app.get('/api/proyectos', auth, async (req, res) => {
+app.get('/proyectos', auth, async (req, res) => {
   try {
     const proyectos = await Proyecto.find({});
-    res.send(proyectos);
+    res.json(proyectos);
   } catch (error) {
-    res.status(500).send(error);
+    res.status(500).json({ error: error.message });
   }
 });
 
-app.delete('/api/proyectos/:id', auth, async (req, res) => {
+app.delete('/proyectos/:id', auth, async (req, res) => {
   try {
     const proyecto = await Proyecto.findByIdAndDelete(req.params.id);
     if (!proyecto) {
-      return res.status(404).send();
+      return res.status(404).json({ error: 'Proyecto no encontrado' });
     }
-    res.send(proyecto);
+    res.json(proyecto);
   } catch (error) {
-    res.status(500).send(error);
+    res.status(500).json({ error: error.message });
   }
 });
 
-app.post('/api/tesinas', auth, async (req, res) => {
+app.post('/tesinas', auth, async (req, res) => {
   try {
     const tesina = new Tesina(req.body);
     await tesina.save();
-    res.status(201).send(tesina);
+    res.status(201).json(tesina);
   } catch (error) {
-    console.error('Error al guardar tesina:', error);
-    res.status(400).send(error);
+    res.status(400).json({ error: error.message });
   }
 });
 
-app.get('/api/tesinas', auth, async (req, res) => {
+app.get('/tesinas', auth, async (req, res) => {
   try {
     const tesinas = await Tesina.find({});
-    res.send(tesinas);
+    res.json(tesinas);
   } catch (error) {
-    console.error('Error al obtener tesinas:', error);
-    res.status(500).send(error);
+    res.status(500).json({ error: error.message });
   }
 });
 
-app.delete('/api/tesinas/:id', auth, async (req, res) => {
+app.delete('/tesinas/:id', auth, async (req, res) => {
   try {
     const tesina = await Tesina.findByIdAndDelete(req.params.id);
     if (!tesina) {
-      return res.status(404).send();
+      return res.status(404).json({ error: 'Tesina no encontrada' });
     }
-    res.send(tesina);
+    res.json(tesina);
   } catch (error) {
-    console.error('Error al eliminar tesina:', error);
-    res.status(500).send(error);
+    res.status(500).json({ error: error.message });
   }
 });
 
-app.post('/api/mobiliario', auth, async (req, res) => {
+app.post('/mobiliario', auth, async (req, res) => {
   try {
     const mobiliario = new Mobiliario(req.body);
     await mobiliario.save();
-    res.status(201).send(mobiliario);
+    res.status(201).json(mobiliario);
   } catch (error) {
-    res.status(400).send(error);
+    res.status(400).json({ error: error.message });
   }
 });
 
-app.get('/api/mobiliario', auth, async (req, res) => {
+app.get('/mobiliario', auth, async (req, res) => {
   try {
     const mobiliarios = await Mobiliario.find({});
-    res.send(mobiliarios);
+    res.json(mobiliarios);
   } catch (error) {
-    res.status(500).send(error);
+    res.status(500).json({ error: error.message });
   }
 });
 
-app.patch('/api/mobiliario/:tipo', auth, async (req, res) => {
+app.patch('/mobiliario/:tipo', auth, async (req, res) => {
   try {
     const { tipo } = req.params;
     const { cantidad } = req.body;
@@ -149,17 +172,21 @@ app.patch('/api/mobiliario/:tipo', auth, async (req, res) => {
       { new: true, runValidators: true }
     );
     if (!mobiliario) {
-      return res.status(404).send();
+      return res.status(404).json({ error: 'Mobiliario no encontrado' });
     }
-    res.send(mobiliario);
+    res.json(mobiliario);
   } catch (error) {
-    res.status(400).send(error);
+    res.status(400).json({ error: error.message });
   }
 });
 
+// Ruta por defecto
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
-export default app;
+app.listen(PORT, () => {
+    console.log(`Servidor escuchando en el puerto ${PORT}`);
+    console.log(`http://localhost:${PORT}`);
+});
 

@@ -10,7 +10,7 @@
 <body>
   <nav>
     <ul class="navbar">
-      <li><a href="./index.html">Cerrar sesión</a></li>
+      <li><a id="logoutButton">Cerrar sesión</a></li>
     </ul>
   </nav>
 
@@ -41,6 +41,68 @@
   </div>
 </main>
 
-  <script src="script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const logoutButton = document.getElementById('logoutButton');
+      
+      logoutButton.addEventListener('click', async () => {
+        try {
+          const token = localStorage.getItem('token');
+          if (!token) {
+            console.error('No token found');
+            window.location.href = '/login.html';
+            return;
+          }
+
+          const response = await fetch('/logout', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (response.ok) {
+            localStorage.removeItem('token');
+            window.location.href = '/index.html';
+          } else {
+            const errorData = await response.json();
+            console.error('Error al cerrar sesión:', errorData.error);
+            alert('Error al cerrar sesión. Por favor, intente nuevamente.');
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          alert('Error al cerrar sesión. Por favor, intente nuevamente.');
+        }
+      });
+
+      // Verificar autenticación al cargar la página
+      const checkAuth = async () => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          window.location.href = '/login.html';
+          return;
+        }
+
+        try {
+          const response = await fetch('/inicio.html', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (!response.ok) {
+            throw new Error('No autorizado');
+          }
+        } catch (error) {
+          console.error('Error de autenticación:', error);
+          window.location.href = '/login.html';
+        }
+      };
+
+      checkAuth();
+    });
+  </script>
 </body>
 </html>
+

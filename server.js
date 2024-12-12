@@ -35,6 +35,7 @@ const auth = (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
+    console.log('Authentication successful:', decoded);
     next();
   } catch (error) {
     console.error('Error de autenticación:', error);
@@ -51,11 +52,11 @@ mongoose.connect(process.env.MONGODB_URI)
 app.post('/api/login', async (req, res) => {
   try {
     const { username, password } = req.body;
-    console.log('Intento de login:', { username }); // Log para debugging
+    console.log('Intento de login:', { username });
 
     if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
       const token = jwt.sign({ username: ADMIN_USERNAME }, process.env.JWT_SECRET, {
-        expiresIn: '24h' // El token expira en 24 horas
+        expiresIn: '24h'
       });
       res.json({ 
         success: true,
@@ -82,7 +83,6 @@ app.get('/api/check-auth', auth, (req, res) => {
 
 // Ruta de logout
 app.post('/logout', auth, (req, res) => {
-  // En una implementación real, aquí podrías invalidar el token en el servidor
   res.json({ message: 'Logout successful' });
 });
 
@@ -233,4 +233,3 @@ app.listen(PORT, () => {
     console.log(`Servidor escuchando en el puerto ${PORT}`);
     console.log(`http://localhost:${PORT}`);
 });
-

@@ -10,9 +10,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('search-input');
     const searchType = document.getElementById('search-type');
 
+    // Get the base API URL depending on the environment
+    const API_URL = window.location.origin;
+
     async function loadProjects() {
         try {
-            const response = await fetch('http://localhost:5000/proyectos', {
+            const response = await fetch(`${API_URL}/proyectos`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -58,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         try {
-            const response = await fetch('http://localhost:5000/proyectos', {
+            const response = await fetch(`${API_URL}/proyectos`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -113,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.deleteProject = async (id) => {
         if (confirm('¿Está seguro de eliminar este proyecto?')) {
             try {
-                const response = await fetch(`http://localhost:5000/proyectos/${id}`, {
+                const response = await fetch(`${API_URL}/proyectos/${id}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${token}`

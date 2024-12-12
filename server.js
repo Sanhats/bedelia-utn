@@ -5,6 +5,10 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 require('dotenv').config();
 
+const path = require('path');
+
+
+
 const Usuario = require('./models/Usuario');
 const Proyecto = require('./models/Proyecto');
 const Tesina = require('./models/Tesina');
@@ -17,7 +21,22 @@ app.use(cors());
 app.use(bodyParser.json());
 
 const path = require('path');
+
+
 app.use(express.static(path.join(__dirname, 'public')));
+
+
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.listen(PORT, () => {
+  console.log(`Servidor escuchando en el puerto ${PORT}`);
+});
+
+
+
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'Inicio.html'));

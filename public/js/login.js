@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .then(data => {
             console.log('Autenticación exitosa:', data);
-            window.location.href = '/inicio.html';
+            window.location.href = '/Inicio.html';
         })
         .catch((error) => {
             console.error('Error de autenticación:', error);
@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             localStorage.setItem('token', data.token);
-            window.location.href = '/inicio.html';
+            window.location.href = '/Inicio.html';
         } catch (error) {
             console.error('Error:', error);
             alert(error.message);

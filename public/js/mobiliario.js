@@ -75,16 +75,36 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (updatedItem.deleted) {
                 // If the item was deleted, remove it from the UI
-                const tableRow = inventoryTable.querySelector(`tr:has(input[data-type="${tipo}"])`);
-                const listRow = inventoryList.querySelector(`tr:has(td:first-child:contains("${tipo}"))`);
-                if (tableRow) tableRow.remove();
-                if (listRow) listRow.remove();
+                const tableRows = inventoryTable.querySelectorAll('tr');
+                const listRows = inventoryList.querySelectorAll('tr');
+                
+                for (let row of tableRows) {
+                    if (row.querySelector(`input[data-type="${tipo}"]`)) {
+                        row.remove();
+                        break;
+                    }
+                }
+                
+                for (let row of listRows) {
+                    if (row.firstElementChild.textContent === tipo) {
+                        row.remove();
+                        break;
+                    }
+                }
             } else {
                 // Otherwise, update the quantity in the UI
                 const input = inventoryTable.querySelector(`input[data-type="${tipo}"]`);
-                const listCell = inventoryList.querySelector(`tr:has(td:first-child:contains("${tipo}")) td:nth-child(2)`);
+                const listRows = inventoryList.querySelectorAll('tr');
+                
                 if (input) input.value = updatedItem.cantidad;
-                if (listCell) listCell.textContent = updatedItem.cantidad;
+                
+                for (let row of listRows) {
+                    if (row.firstElementChild.textContent === tipo) {
+                        row.children[1].textContent = updatedItem.cantidad;
+                        row.children[2].textContent = updatedItem.cantidad;
+                        break;
+                    }
+                }
             }
         } catch (error) {
             console.error('Error:', error);

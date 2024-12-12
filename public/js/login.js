@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('token');
     if (token) {
         // Verificar si el token es válido
-        fetch('/check-auth', {
+        fetch('/api/check-auth', {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const password = document.querySelector('#password').value;
         
         try {
-            const response = await fetch('/login', {
+            const response = await fetch('/api/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

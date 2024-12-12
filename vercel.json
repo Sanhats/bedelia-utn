@@ -17,7 +17,7 @@
     },
     {
       "src": "/(.*\\.(js|css|html|jpg|jpeg|png|gif|ico))",
-      "dest": "/public/$1"
+      "dest": "public/$1"
     },
     {
       "src": "/(.*)",
@@ -25,4 +25,3 @@
     }
   ]
 }
-

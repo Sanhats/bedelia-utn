@@ -25,15 +25,20 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Middleware para verificar el token en rutas protegidas
 const auth = (req, res, next) => {
   try {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
+    const token = req.headers.authorization?.replace('Bearer ', '') || 
+                 req.query.token || 
+                 req.cookies?.token;
+
     if (!token) {
-      throw new Error('No token provided');
+      return res.status(401).json({ error: 'Token no proporcionado' });
     }
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
     next();
   } catch (error) {
-    res.status(401).json({ error: 'Please authenticate.' });
+    console.error('Error de autenticación:', error);
+    return res.status(401).json({ error: 'Por favor, autentícate.' });
   }
 };
 
@@ -43,24 +48,36 @@ mongoose.connect(process.env.MONGODB_URI)
     .catch((error) => console.error('Error al conectar a MongoDB:', error));
 
 // Ruta de login
-app.post('/login', async (req, res) => {
+app.post('/api/login', async (req, res) => {
   try {
     const { username, password } = req.body;
+    console.log('Intento de login:', { username }); // Log para debugging
+
     if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-      const token = jwt.sign({ username: ADMIN_USERNAME }, process.env.JWT_SECRET);
-      res.json({ user: { username: ADMIN_USERNAME }, token });
+      const token = jwt.sign({ username: ADMIN_USERNAME }, process.env.JWT_SECRET, {
+        expiresIn: '24h' // El token expira en 24 horas
+      });
+      res.json({ 
+        success: true,
+        user: { username: ADMIN_USERNAME }, 
+        token 
+      });
     } else {
       res.status(401).json({ error: 'Credenciales inválidas' });
     }
   } catch (error) {
-    console.error('Error en /login:', error);
+    console.error('Error en /api/login:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
 
 // Ruta para verificar la autenticación
-app.get('/check-auth', auth, (req, res) => {
-  res.json({ message: 'Token válido', user: req.user });
+app.get('/api/check-auth', auth, (req, res) => {
+  res.json({ 
+    success: true,
+    message: 'Token válido', 
+    user: req.user 
+  });
 });
 
 // Ruta de logout
@@ -70,7 +87,22 @@ app.post('/logout', auth, (req, res) => {
 });
 
 // Rutas protegidas para archivos HTML
-app.get('/inicio.html', auth, (req, res) => {
+app.get('/inicio.html', (req, res, next) => {
+  const token = req.headers.authorization?.replace('Bearer ', '') || 
+                req.query.token || 
+                req.cookies?.token;
+
+  if (!token) {
+    return res.redirect('/login.html');
+  }
+
+  try {
+    jwt.verify(token, process.env.JWT_SECRET);
+    next();
+  } catch (error) {
+    return res.redirect('/login.html');
+  }
+}, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'inicio.html'));
 });
 

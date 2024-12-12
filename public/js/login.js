@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('token');
     if (token) {
         // Verificar si el token es válido
-        fetch('/check-auth', {
+        fetch('/api/check-auth', {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 return response.json();
             } else {
+                localStorage.removeItem('token');
                 throw new Error('Token inválido');
             }
         })
@@ -34,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const password = document.querySelector('#password').value;
         
         try {
-            const response = await fetch('/login', {
+            const response = await fetch('/api/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -42,18 +43,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ username, password })
             });
             
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-            }
-            
             const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.error || 'Error al iniciar sesión');
+            }
             
             localStorage.setItem('token', data.token);
             window.location.href = '/inicio.html';
         } catch (error) {
             console.error('Error:', error);
-            alert('Error al iniciar sesión: ' + error.message);
+            alert(error.message);
         }
     });
 });

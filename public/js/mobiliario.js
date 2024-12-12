@@ -10,9 +10,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const addTypeBtn = document.getElementById('add-type-btn');
     const addTypeForm = document.getElementById('add-type-form');
 
+    // Get the base API URL depending on the environment
+    const API_URL = window.location.origin;
+
     async function loadInventory() {
         try {
-            const response = await fetch('http://localhost:5000/mobiliario', {
+            const response = await fetch(`${API_URL}/mobiliario`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -55,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function updateQuantity(tipo, cantidad) {
         try {
-            const response = await fetch(`http://localhost:5000/mobiliario/${tipo}`, {
+            const response = await fetch(`${API_URL}/mobiliario/${tipo}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -68,7 +71,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error('Failed to update quantity');
             }
 
-            loadInventory();
+            const updatedItem = await response.json();
+            
+            if (updatedItem.deleted) {
+                // If the item was deleted, remove it from the UI
+                const tableRow = inventoryTable.querySelector(`tr:has(input[data-type="${tipo}"])`);
+                const listRow = inventoryList.querySelector(`tr:has(td:first-child:contains("${tipo}"))`);
+                if (tableRow) tableRow.remove();
+                if (listRow) listRow.remove();
+            } else {
+                // Otherwise, update the quantity in the UI
+                const input = inventoryTable.querySelector(`input[data-type="${tipo}"]`);
+                const listCell = inventoryList.querySelector(`tr:has(td:first-child:contains("${tipo}")) td:nth-child(2)`);
+                if (input) input.value = updatedItem.cantidad;
+                if (listCell) listCell.textContent = updatedItem.cantidad;
+            }
         } catch (error) {
             console.error('Error:', error);
             alert('Error al actualizar la cantidad');
@@ -83,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const newType = document.getElementById('new-type-name').value;
         if (newType) {
             try {
-                const response = await fetch('http://localhost:5000/mobiliario', {
+                const response = await fetch(`${API_URL}/mobiliario`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

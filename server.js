@@ -204,15 +204,23 @@ app.patch('/mobiliario/:tipo', auth, async (req, res) => {
   try {
     const { tipo } = req.params;
     const { cantidad } = req.body;
-    const mobiliario = await Mobiliario.findOneAndUpdate(
-      { tipo },
-      { $inc: { cantidad } },
-      { new: true, runValidators: true }
-    );
+    let mobiliario = await Mobiliario.findOne({ tipo });
+
     if (!mobiliario) {
       return res.status(404).json({ error: 'Mobiliario no encontrado' });
     }
-    res.json(mobiliario);
+
+    mobiliario.cantidad += cantidad;
+
+    if (mobiliario.cantidad <= 0) {
+      // If quantity is 0 or less, delete the item
+      await Mobiliario.deleteOne({ _id: mobiliario._id });
+      res.json({ deleted: true, tipo });
+    } else {
+      // Otherwise, save the updated quantity
+      await mobiliario.save();
+      res.json(mobiliario);
+    }
   } catch (error) {
     res.status(400).json({ error: error.message });
   }

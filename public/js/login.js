@@ -10,12 +10,17 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .then(response => {
             if (response.ok) {
-                window.location.href = '/inicio.html';
+                return response.json();
             } else {
-                localStorage.removeItem('token');
+                throw new Error('Token inválido');
             }
         })
-        .catch(() => {
+        .then(data => {
+            console.log('Autenticación exitosa:', data);
+            window.location.href = '/inicio.html';
+        })
+        .catch((error) => {
+            console.error('Error de autenticación:', error);
             localStorage.removeItem('token');
         });
     }
@@ -37,17 +42,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ username, password })
             });
             
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
             const data = await response.json();
             
-            if (response.ok) {
-                localStorage.setItem('token', data.token);
-                window.location.href = '/inicio.html';
-            } else {
-                alert('Credenciales inválidas');
-            }
+            localStorage.setItem('token', data.token);
+            window.location.href = '/inicio.html';
         } catch (error) {
             console.error('Error:', error);
-            alert('Error al iniciar sesión');
+            alert('Error al iniciar sesión: ' + error.message);
         }
     });
 });

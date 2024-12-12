@@ -87,7 +87,7 @@ app.post('/logout', auth, (req, res) => {
 });
 
 // Rutas protegidas para archivos HTML
-app.get('/inicio.html', (req, res, next) => {
+app.get('/Inicio.html', (req, res, next) => {
   const token = req.headers.authorization?.replace('Bearer ', '') || 
                 req.query.token || 
                 req.cookies?.token;
@@ -103,7 +103,7 @@ app.get('/inicio.html', (req, res, next) => {
     return res.redirect('/login.html');
   }
 }, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'inicio.html'));
+  res.sendFile(path.join(__dirname, 'public', 'Inicio.html'));
 });
 
 app.get('/proyectos.html', auth, (req, res) => {

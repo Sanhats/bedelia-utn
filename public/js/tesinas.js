@@ -11,6 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchType = document.getElementById('search-type');
     const yearSelect = document.getElementById('year');
 
+    // Get the base API URL depending on the environment
+    const API_URL = window.location.origin;
+
     // Populate year dropdown
     const currentYear = new Date().getFullYear();
     for (let year = 2010; year <= currentYear; year++) {
@@ -22,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadTesinas() {
         try {
-            const response = await fetch('http://localhost:5000/tesinas', {
+            const response = await fetch(`${API_URL}/tesinas`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -68,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         try {
-            const response = await fetch('http://localhost:5000/tesinas', {
+            const response = await fetch(`${API_URL}/tesinas`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -120,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.deleteTesina = async (id) => {
         if (confirm('¿Está seguro de eliminar esta tesina?')) {
             try {
-                const response = await fetch(`http://localhost:5000/tesinas/${id}`, {
+                const response = await fetch(`${API_URL}/tesinas/${id}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -144,3 +147,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loadTesinas();
 });
+
